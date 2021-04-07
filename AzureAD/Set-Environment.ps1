@@ -6,7 +6,10 @@ Param(
     [int]          [Parameter(Mandatory = $false)] $UserStartingIndex = 1,
     [string]       [Parameter(Mandatory = $false)] $UsageLocation = "KR",
     [string]       [Parameter(Mandatory = $false)] $ResourceLocation = "koreacentral",
-    [switch]                                       $AddPowerBI
+    [switch]                                       $AddPowerBI,
+    [switch]                                       $RegisterLogicApp,
+    [switch]                                       $RegisterApiManagement,
+    [switch]                                       $RegisterCosmosDB
 )
 
 # Install modules
@@ -115,12 +118,19 @@ $connected = Connect-AzAccount -Credential $adminCredential
 Write-Host "(7/8) Registering resource providers ..." -ForegroundColor Green
 
 $namespaces = @(
-    "Microsoft.Logic",
-    "Microsoft.Storage",
-    "Microsoft.Network",
-    "Microsoft.ApiManagement",
-    "Microsoft.DocumentDB"
+    "Microsoft.Storage"
 )
+if ($RegisterLogicApp) {
+    $namespaces += "Microsoft.Logic"
+}
+if ($RegisterApiManagement) {
+    $namespaces += "Microsoft.Network"
+    $namespaces += "Microsoft.ApiManagement"
+    $namespaces += "Microsoft.Logic"
+}
+if ($RegisterCosmosDB) {
+    $namespaces += "Microsoft.DocumentDB"
+}
 
 $namespaces | ForEach-Object {
     $provider = Get-AzResourceProvider -ProviderNamespace $_ | Where-Object { $_.RegistrationState -eq "Registered" }
