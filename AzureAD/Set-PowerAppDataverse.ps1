@@ -43,4 +43,6 @@ $activated = New-AdminPowerAppCdsDatabase `
     -CurrencyName $currency.CurrencyName `
     -LanguageName $language.LanguageName
 
-Write-Host "`r`n-=-=-=- Initialised Power Apps Dataverse -=-=-=-`r`n" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+Write-Host "-=-=-=- Initialised Power Apps Dataverse -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"

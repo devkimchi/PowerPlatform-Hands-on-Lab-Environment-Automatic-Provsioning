@@ -163,6 +163,8 @@ $users | ForEach-Object {
 }
 
 # Initialise Power Apps Dataverse
-Write-Host "`r`n-=-=-=- Initialising Power Apps Dataverse -=-=-=-`r`n" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+Write-Host "-=-=-=- Initialising Power Apps Dataverse -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
 
 powershell ./Set-PowerAppDataverse.ps1 -TenantName $TenantName -AdminUsername $AdminUsername -AdminPassword $AdminPassword
