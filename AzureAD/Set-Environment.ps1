@@ -1,15 +1,15 @@
 Param(
-    [string]       [Parameter(Mandatory = $true)]  $AdminUsername,
-    [securestring] [Parameter(Mandatory = $true)]  $AdminPassword,
-    [string]       [Parameter(Mandatory = $true)]  $TenantName,
-    [int]          [Parameter(Mandatory = $false)] $NumberOfUsers = 24,
-    [int]          [Parameter(Mandatory = $false)] $UserStartingIndex = 1,
-    [string]       [Parameter(Mandatory = $false)] $UsageLocation = "KR",
-    [string]       [Parameter(Mandatory = $false)] $ResourceLocation = "koreacentral",
-    [switch]                                       $AddPowerBI,
-    [switch]                                       $RegisterLogicApp,
-    [switch]                                       $RegisterApiManagement,
-    [switch]                                       $RegisterCosmosDB
+    [string] [Parameter(Mandatory = $true)]  $AdminUsername,
+    [string] [Parameter(Mandatory = $true)]  $AdminPassword,
+    [string] [Parameter(Mandatory = $true)]  $TenantName,
+    [int]    [Parameter(Mandatory = $false)] $NumberOfUsers = 24,
+    [int]    [Parameter(Mandatory = $false)] $UserStartingIndex = 1,
+    [string] [Parameter(Mandatory = $false)] $UsageLocation = "KR",
+    [string] [Parameter(Mandatory = $false)] $ResourceLocation = "koreacentral",
+    [switch]                                 $AddPowerBI,
+    [switch]                                 $RegisterLogicApp,
+    [switch]                                 $RegisterApiManagement,
+    [switch]                                 $RegisterCosmosDB
 )
 
 # Install modules
@@ -36,7 +36,7 @@ if ($response.available -eq $true) {
 Write-Host "(3/9) Logging into Azure AD ..." -ForegroundColor Green
 
 $adminUpn = "$AdminUsername@$TenantName.onmicrosoft.com"
-$adminPW = $AdminPassword
+$adminPW = ConvertTo-SecureString $AdminPassword -AsPlainText -Force
 $adminCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($adminUpn, $adminPW)
 
 $connected = Connect-AzureAD -Credential $adminCredential

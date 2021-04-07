@@ -1,7 +1,7 @@
 Param(
-    [string]       [Parameter(Mandatory = $true)]  $AdminUsername,
-    [securestring] [Parameter(Mandatory = $true)]  $AdminPassword,
-    [string]       [Parameter(Mandatory = $true)]  $TenantName
+    [string] [Parameter(Mandatory = $true)]  $AdminUsername,
+    [string] [Parameter(Mandatory = $true)]  $AdminPassword,
+    [string] [Parameter(Mandatory = $true)]  $TenantName
 )
 
 # Install modules
@@ -14,7 +14,7 @@ Install-Module -Name Microsoft.PowerApps.PowerShell -Scope AllUsers -Repository 
 Write-Host "(2/3) Logging into Power Apps ..." -ForegroundColor Green
 
 $adminUpn = "$AdminUsername@$TenantName.onmicrosoft.com"
-$adminPW = $AdminPassword
+$adminPW = ConvertTo-SecureString $AdminPassword -AsPlainText -Force
 
 $connected = Add-PowerAppsAccount -Username $adminUpn -Password $adminPW
 
