@@ -13,13 +13,18 @@ Param(
 )
 
 # Install modules
-Write-Host "(1/9) Install PowerShell modules ..." -ForegroundColor Green
+Write-Host "(1/11) Install PowerShell modules ..." -ForegroundColor Green
 
 Install-Module -Name Az -Scope AllUsers -Repository PSGallery -Force -AllowClobber
 Install-Module -Name AzureAD -Scope AllUsers -Repository PSGallery -Force -AllowClobber
+Install-Module -Name Microsoft.PowerApps.Administration.PowerShell -Scope AllUsers -Repository PSGallery -Force -AllowClobber
+Install-Module -Name Microsoft.PowerApps.PowerShell -Scope AllUsers -Repository PSGallery -Force -AllowClobber
+
+Write-Host "-=-=-=- PowerShell modules installed -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
 
 # Check whether the tenant is valid or not
-Write-Host "(2/9) Checking tenant availability ..." -ForegroundColor Green
+Write-Host "(2/11) Validating tenant ..." -ForegroundColor Green
 
 $uri = "https://o365.rocks/home/check"
 $body = @{ name = $TenantName } | ConvertTo-Json
@@ -32,8 +37,49 @@ if ($response.available -eq $true) {
     return
 }
 
+Write-Host "-=-=-=- Tenant validated -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+
+# Login to Power Apps
+Write-Host "(3/11) Logging into Power Apps ..." -ForegroundColor Green
+
+$adminUpn = "$AdminUsername@$TenantName.onmicrosoft.com"
+$adminPW = ConvertTo-SecureString $AdminPassword -AsPlainText -Force
+$adminCredential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($adminUpn, $adminPW)
+
+$connected = Add-PowerAppsAccount -Username $adminUpn -Password $adminPW
+
+Write-Host "-=-=-=- Power Apps logged in -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+
+# Initialise Microsoft Dataverse to the default environment
+Write-Host "(4/11) Initialising Microsoft Dataverse ..." -ForegroundColor Green
+
+$paenv = Get-AdminPowerAppEnvironment -Default
+if ($paenv.CommonDataServiceDatabaseProvisioningState -eq "Succeeded") {
+    Write-Host "Dataverse in the default environment has already been initialised" -ForegroundColor Red -BackgroundColor Yellow
+} else {
+    $currency = Get-AdminPowerAppCdsDatabaseCurrencies `
+        -LocationName $paenv.Location | Where-Object {
+            $_.IsTenantDefaultCurrency -eq $true
+        }
+
+    $language = Get-AdminPowerAppCdsDatabaseLanguages `
+        -LocationName $paenv.Location | Where-Object {
+            $_.IsTenantDefaultLanguage -eq $true
+        }
+
+    $activated = New-AdminPowerAppCdsDatabase `
+        -EnvironmentName $paenv.EnvironmentName `
+        -CurrencyName $currency.CurrencyName `
+        -LanguageName $language.LanguageName
+}
+
+Write-Host "-=-=-=- Microsoft Dataverse initialised -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+
 # Login to AzureAD
-Write-Host "(3/9) Logging into Azure AD ..." -ForegroundColor Green
+Write-Host "(5/11) Logging into Azure AD ..." -ForegroundColor Green
 
 $adminUpn = "$AdminUsername@$TenantName.onmicrosoft.com"
 $adminPW = ConvertTo-SecureString $AdminPassword -AsPlainText -Force
@@ -41,8 +87,11 @@ $adminCredential = New-Object -TypeName System.Management.Automation.PSCredentia
 
 $connected = Connect-AzureAD -Credential $adminCredential
 
+Write-Host "-=-=-=- AzureAD logged in -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+
 # Add user accounts
-Write-Host "(4/9) Creating user accounts ..." -ForegroundColor Green
+Write-Host "(6/11) Creating user accounts ..." -ForegroundColor Green
 
 $userPWProfile = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
 $userPWProfile.Password = "UserPa`$`$W0rd!@#`$"
@@ -65,8 +114,11 @@ $users = @()
     $users += $user
 }
 
+Write-Host "-=-=-=- User accounts added -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+
 # Assign roles to user
-Write-Host "(5/9) Assigning user roles ..." -ForegroundColor Green
+Write-Host "(7/11) Assigning user roles ..." -ForegroundColor Green
 
 $roleNames = @(
     "Power Platform Administrator"
@@ -98,8 +150,11 @@ $roles | ForEach-Object {
     }
 }
 
+Write-Host "-=-=-=- User roles assigned -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+
 # Assign licence to user
-Write-Host "(6/9) Assigning licenses ..." -ForegroundColor Green
+Write-Host "(8/11) Assigning licenses ..." -ForegroundColor Green
 
 $sku = Get-AzureADSubscribedSku
 
@@ -113,13 +168,19 @@ $users | ForEach-Object {
     $assigned = Set-AzureADUserLicense -ObjectId $_.ObjectId -AssignedLicenses $licensesToAssign
 }
 
+Write-Host "-=-=-=- Licenses assigned -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+
 # Login to Azure
-Write-Host "(7/9) Logging into Azure ..." -ForegroundColor Green
+Write-Host "(9/11) Logging into Azure ..." -ForegroundColor Green
 
 $connected = Connect-AzAccount -Credential $adminCredential
 
+Write-Host "-=-=-=- Azure logged in -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+
 # Register resource providers
-Write-Host "(8/9) Registering resource providers ..." -ForegroundColor Green
+Write-Host "(10/11) Registering resource providers ..." -ForegroundColor Green
 
 $namespaces = @(
     "Microsoft.Storage"
@@ -143,8 +204,11 @@ $namespaces | ForEach-Object {
     }
 }
 
+Write-Host "-=-=-=- Resource providers registered -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n"
+
 # Assign Azure roles to user
-Write-Host "(9/9) Assigning Azure roles ..." -ForegroundColor Green
+Write-Host "(11/11) Assigning Azure roles ..." -ForegroundColor Green
 
 $role = Get-AzRoleDefinition | Where-Object { $_.Name -eq "Contributor" }
 
@@ -162,9 +226,5 @@ $users | ForEach-Object {
         -Scope $rg.ResourceId
 }
 
-# Initialise Power Apps Dataverse
+Write-Host "-=-=-=- Azure roles assigned -=-=-=-" -ForegroundColor Blue -BackgroundColor White
 Write-Host "`r`n"
-Write-Host "-=-=-=- Initialising Power Apps Dataverse -=-=-=-" -ForegroundColor Blue -BackgroundColor White
-Write-Host "`r`n"
-
-powershell ./Set-PowerAppDataverse.ps1 -TenantName $TenantName -AdminUsername $AdminUsername -AdminPassword $AdminPassword
