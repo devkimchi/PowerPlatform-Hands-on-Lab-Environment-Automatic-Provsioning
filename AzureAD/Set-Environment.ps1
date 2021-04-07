@@ -144,12 +144,10 @@ $roleNames | ForEach-Object {
         $enabled = Enable-AzureADDirectoryRole -RoleTemplateId $roleTemplate.ObjectId
     
         $role = Get-AzureADDirectoryRole | Where-Object { $_.DisplayName -eq $roleName }
-
-        $roles += $role
     }
-}
 
-$roles
+    $roles += $role
+}
 
 $roles | ForEach-Object {
     $role = $_
@@ -205,8 +203,6 @@ if ($RegisterApiManagement) {
 if ($RegisterCosmosDB) {
     $namespaces += "Microsoft.DocumentDB"
 }
-
-$namespaces
 
 $namespaces | ForEach-Object {
     $provider = Get-AzResourceProvider -ProviderNamespace $_ | Where-Object { $_.RegistrationState -eq "Registered" }
