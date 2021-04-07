@@ -13,11 +13,18 @@ Param(
 )
 
 # Install modules
-Write-Host "(1/11) Install PowerShell modules ..." -ForegroundColor Green
+Write-Host "(1/11) Installing PowerShell modules ..." -ForegroundColor Green
 
+Write-Host "Installing Az ..."
 Install-Module -Name Az -Scope AllUsers -Repository PSGallery -Force -AllowClobber
+
+Write-Host "Installing AzureAD ..."
 Install-Module -Name AzureAD -Scope AllUsers -Repository PSGallery -Force -AllowClobber
+
+Write-Host "Installing Microsoft.PowerApps.Administration.PowerShell ..."
 Install-Module -Name Microsoft.PowerApps.Administration.PowerShell -Scope AllUsers -Repository PSGallery -Force -AllowClobber
+
+Write-Host "Installing Microsoft.PowerApps.PowerShell ..."
 Install-Module -Name Microsoft.PowerApps.PowerShell -Scope AllUsers -Repository PSGallery -Force -AllowClobber
 
 Write-Host "-=-=-=- PowerShell modules installed -=-=-=-" -ForegroundColor Blue -BackgroundColor White
@@ -142,6 +149,8 @@ $roleNames | ForEach-Object {
     }
 }
 
+$roles
+
 $roles | ForEach-Object {
     $role = $_
 
@@ -196,6 +205,8 @@ if ($RegisterApiManagement) {
 if ($RegisterCosmosDB) {
     $namespaces += "Microsoft.DocumentDB"
 }
+
+$namespaces
 
 $namespaces | ForEach-Object {
     $provider = Get-AzResourceProvider -ProviderNamespace $_ | Where-Object { $_.RegistrationState -eq "Registered" }
