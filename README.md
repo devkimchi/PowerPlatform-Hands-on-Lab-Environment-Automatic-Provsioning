@@ -11,7 +11,7 @@ This provides sample PowerShell scripts to automatically provision Microsoft 365
 
 ## Getting Started ##
 
-### 1. Trial Tenants for Microsoft 365 ###
+### 1. Trial Tenant for Microsoft 365 ###
 
 * Open a trial tenant for Microsoft 365: [http://aka.ms/Office365E5Trial](http://aka.ms/Office365E5Trial)
   * Use the username, "`admin`" (or something else you like), and a password of your choice.
