@@ -13,11 +13,13 @@ Param(
 )
 
 # Install modules
+Write-Host "(1/9) Install PowerShell modules ..." -ForegroundColor Green
+
 Install-Module -Name Az -Scope AllUsers -Repository PSGallery -Force -AllowClobber
 Install-Module -Name AzureAD -Scope AllUsers -Repository PSGallery -Force -AllowClobber
 
 # Check whether the tenant is valid or not
-Write-Host "(1/8) Checking tenant availability ..." -ForegroundColor Green
+Write-Host "(2/9) Checking tenant availability ..." -ForegroundColor Green
 
 $uri = "https://o365.rocks/home/check"
 $body = @{ name = $TenantName } | ConvertTo-Json
@@ -25,13 +27,13 @@ $headers = @{ "Content-Type" = "application/json" }
 $response = Invoke-RestMethod -Method POST -Uri $uri -Headers $headers -Body $body
 
 if ($response.available -eq $true) {
-    Write-Host "The tenant, $TenantName, doesn't exist" -ForegroundColor Red
+    Write-Host "The tenant, $TenantName, doesn't exist" -ForegroundColor Red -BackgroundColor Yellow
 
     return
 }
 
 # Login to AzureAD
-Write-Host "(2/8) Logging into Azure AD ..." -ForegroundColor Green
+Write-Host "(3/9) Logging into Azure AD ..." -ForegroundColor Green
 
 $adminUpn = "$AdminUsername@$TenantName.onmicrosoft.com"
 $adminPW = $AdminPassword
@@ -40,7 +42,7 @@ $adminCredential = New-Object -TypeName System.Management.Automation.PSCredentia
 $connected = Connect-AzureAD -Credential $adminCredential
 
 # Add user accounts
-Write-Host "(3/8) Creating user accounts ..." -ForegroundColor Green
+Write-Host "(4/9) Creating user accounts ..." -ForegroundColor Green
 
 $userPWProfile = New-Object -TypeName Microsoft.Open.AzureAD.Model.PasswordProfile
 $userPWProfile.Password = "UserPa`$`$W0rd!@#`$"
@@ -64,7 +66,7 @@ $users = @()
 }
 
 # Assign roles to user
-Write-Host "(4/8) Assigning user roles ..." -ForegroundColor Green
+Write-Host "(5/9) Assigning user roles ..." -ForegroundColor Green
 
 $roleNames = @(
     "Power Platform Administrator"
@@ -75,12 +77,14 @@ if ($AddPowerBI) {
 
 $roles = @()
 $roleNames | ForEach-Object {
-    $role = Get-AzureADDirectoryRole | Where-Object { $_.DisplayName -eq $_ }
+    $roleName = $_
+
+    $role = Get-AzureADDirectoryRole | Where-Object { $_.DisplayName -eq $roleName }
     if ($role -eq $null) {
-        $roleTemplate = Get-AzureADDirectoryRoleTemplate | Where-Object { $_.DisplayName -eq $_ }
+        $roleTemplate = Get-AzureADDirectoryRoleTemplate | Where-Object { $_.DisplayName -eq $roleName }
         $enabled = Enable-AzureADDirectoryRole -RoleTemplateId $roleTemplate.ObjectId
     
-        $role = Get-AzureADDirectoryRole | Where-Object { $_.DisplayName -eq $_ }
+        $role = Get-AzureADDirectoryRole | Where-Object { $_.DisplayName -eq $roleName }
 
         $roles += $role
     }
@@ -95,7 +99,7 @@ $roles | ForEach-Object {
 }
 
 # Assign licence to user
-Write-Host "(5/8) Assigning licenses ..." -ForegroundColor Green
+Write-Host "(6/9) Assigning licenses ..." -ForegroundColor Green
 
 $sku = Get-AzureADSubscribedSku
 
@@ -110,12 +114,12 @@ $users | ForEach-Object {
 }
 
 # Login to Azure
-Write-Host "(6/8) Logging into Azure ..." -ForegroundColor Green
+Write-Host "(7/9) Logging into Azure ..." -ForegroundColor Green
 
 $connected = Connect-AzAccount -Credential $adminCredential
 
 # Register resource providers
-Write-Host "(7/8) Registering resource providers ..." -ForegroundColor Green
+Write-Host "(8/9) Registering resource providers ..." -ForegroundColor Green
 
 $namespaces = @(
     "Microsoft.Storage"
@@ -140,7 +144,7 @@ $namespaces | ForEach-Object {
 }
 
 # Assign Azure roles to user
-Write-Host "(8/8) Assigning Azure roles ..." -ForegroundColor Green
+Write-Host "(9/9) Assigning Azure roles ..." -ForegroundColor Green
 
 $role = Get-AzRoleDefinition | Where-Object { $_.Name -eq "Contributor" }
 
@@ -159,6 +163,6 @@ $users | ForEach-Object {
 }
 
 # Initialise Power Apps Dataverse
-Write-Host "-=-=-=- Initialising Power Apps Dataverse -=-=-=-" -ForegroundColor Blue -BackgroundColor White
+Write-Host "`r`n-=-=-=- Initialising Power Apps Dataverse -=-=-=-`r`n" -ForegroundColor Blue -BackgroundColor White
 
 powershell ./Set-PowerAppDataverse.ps1 -TenantName $TenantName -AdminUsername $AdminUsername -AdminPassword $AdminPassword

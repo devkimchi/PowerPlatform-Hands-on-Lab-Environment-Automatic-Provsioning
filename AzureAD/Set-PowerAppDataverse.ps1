@@ -5,11 +5,13 @@ Param(
 )
 
 # Install modules
+Write-Host "(1/3) Install PowerShell modules ..." -ForegroundColor Green
+
 Install-Module -Name Microsoft.PowerApps.Administration.PowerShell -Scope AllUsers -Repository PSGallery -Force -AllowClobber
 Install-Module -Name Microsoft.PowerApps.PowerShell -Scope AllUsers -Repository PSGallery -Force -AllowClobber
 
 # Login to Power Apps
-Write-Host "(1/2) Logging into Power Apps ..." -ForegroundColor Green
+Write-Host "(2/3) Logging into Power Apps ..." -ForegroundColor Green
 
 $adminUpn = "$AdminUsername@$TenantName.onmicrosoft.com"
 $adminPW = $AdminPassword
@@ -17,11 +19,11 @@ $adminPW = $AdminPassword
 $connected = Add-PowerAppsAccount -Username $adminUpn -Password $adminPW
 
 # Initialise Dataverse to the default environment
-Write-Host "(2/2) Initialising Dataverse ..." -ForegroundColor Green
+Write-Host "(3/3) Initialising Dataverse ..." -ForegroundColor Green
 
 $paenv = Get-AdminPowerAppEnvironment -Default
 if ($paenv.CommonDataServiceDatabaseProvisioningState -eq "Succeeded") {
-    Write-Host "Dataverse in the default environment has already been initialised" -ForegroundColor Red
+    Write-Host "Dataverse in the default environment has already been initialised" -ForegroundColor Red -BackgroundColor Yellow
 
     return
 }
@@ -40,3 +42,5 @@ $activated = New-AdminPowerAppCdsDatabase `
     -EnvironmentName $paenv.EnvironmentName `
     -CurrencyName $currency.CurrencyName `
     -LanguageName $language.LanguageName
+
+Write-Host "`r`n-=-=-=- Initialised Power Apps Dataverse -=-=-=-`r`n" -ForegroundColor Blue -BackgroundColor White
